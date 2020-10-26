@@ -1,0 +1,108 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  "Lambda Function to subscribe automatically loggroups matching an input pattern to New Relic log ingestion lambda function."
+Globals:
+  Function:
+    Timeout: 300
+    MemorySize: 128
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Author: Amine Benzaied (New Relic)
+    Description: Lambda Function to subscribe automatically loggroups matching an input pattern to New Relic log ingestion lambda function.
+    HomePageUrl: https://github.com/aminoz007/aws-newrelic-loggroup-connector
+    Labels:
+    - newrelic
+    - autosubscribe
+    - serverless
+    - loggroups
+    - cloudwatch
+    - logs
+    LicenseUrl: ./LICENSE
+    Name: newrelic-loggroup-connector
+    ReadmeUrl: ./README.md
+    SemanticVersion: 1.0.0
+    SourceCodeUrl: https://github.com/aminoz007/aws-newrelic-loggroup-connector
+    SpdxLicenseId: Apache-2.0    
+
+Parameters:
+  LambdaARN:
+    Type: String
+    Default: arn:aws:lambda:us-east-1:123456789000:function:NRLogIngestionLambda
+    Description: Enter ARN for target lambda function
+  LogGroupPattern:
+    Type: String
+    Default: Test
+    Description: Enter regex for matching logGroups
+  UseExistingLogs:
+    Type: String
+    Default: 'false'
+    AllowedValues:
+    - 'true'
+    - 'false'
+    Description: Select true for subscribing existing logs
+  LogGroupTags:
+    Type: CommaDelimitedList
+    Default: ''
+    Description: Enter comma separated keyvalue pairs for filtering logGroups using tags. Ex KeyName1=string,KeyName2=string. This is optional leave it blank if tag based filtering is not needed.
+Resources:
+  NewRelicLogGroupLambdaConnector:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: loggroup-connector.lambda_handler
+      Runtime: python3.8
+      Environment:
+        Variables:
+          LAMBDA_ARN:
+            Ref: LambdaARN
+          LOG_GROUP_PATTERN:
+            Ref: LogGroupPattern
+          USE_EXISTING_LOG_GROUPS:
+            Ref: UseExistingLogs
+          LOG_GROUP_TAGS:
+            Fn::Join:
+            - ','
+            - Ref: LogGroupTags
+      Policies:
+      - Statement:
+        - Sid: ReadWriteFilterPolicy
+          Effect: Allow
+          Action:
+          - logs:DescribeLogGroups
+          - logs:DescribeLogStreams
+          - logs:PutSubscriptionFilter
+          Resource:
+          - Fn::Sub: arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*
+      Events:
+        LambdaTrigger:
+          Type: CloudWatchEvent
+          Properties:
+            Pattern:
+              source:
+              - aws.logs
+              detail:
+                eventSource:
+                - logs.amazonaws.com
+                eventName:
+                - CreateLogGroup
+  NewRelicCWLambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Ref: LambdaARN
+      Principal:
+        Fn::Sub: logs.${AWS::Region}.amazonaws.com
+      SourceAccount:
+        Ref: AWS::AccountId
+      SourceArn:
+        Fn::Sub: arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:*
+Outputs:
+  NewRelicLogGroupLambdaConnector:
+    Description: NewRelicLogGroupLambdaConnector Function ARN
+    Value:
+      Fn::GetAtt:
+      - NewRelicLogGroupLambdaConnector
+      - Arn
