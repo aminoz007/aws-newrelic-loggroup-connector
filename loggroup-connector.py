@@ -17,15 +17,21 @@ This Lambda function is used to automatically subscribe newly created
 and existing Cloudwatch LogGroups to NR logs ingestion lambda.
 """
 
+"""
+Author: Amine Benzaied (Expert Services)
+"""
+
 import boto3
 import os
+import re
 
 LOG_GROUP_TAGS = os.getenv("LOG_GROUP_TAGS", "")
-LOG_GROUP_PATTERN = os.getenv("LOG_GROUP_PATTERN","")
-LAMBDA_ARN = os.getenv("LAMBDA_ARN","")
+LOG_GROUP_PATTERN = os.getenv("LOG_GROUP_PATTERN", "")
+LAMBDA_ARN = os.getenv("LAMBDA_ARN", "")
 USE_EXISTING_LOG_GROUPS = os.getenv("USE_EXISTING_LOG_GROUPS", "false")
 
 client = boto3.client('logs')
+
 
 def subscribeToLogIngestionFunction(logGroupName):
     try:
@@ -35,35 +41,43 @@ def subscribeToLogIngestionFunction(logGroupName):
             filterPattern='',
             destinationArn=LAMBDA_ARN
         )
+        print(f'Subscribed logGroup: {logGroupName}')
     except Exception as e:
         print(f'Error subscribing: {logGroupName} => {e}')
 
+
 def filterLogGroups(logGroups, pattern, tags):
-    filterdGroups = []
+    filteredGroups = []
     for logGroup in logGroups:
-        if pattern.match(logGroup['logGroupName']) & (logGroup['eventName'] == 'existingLogs' | logGroup['eventName'] == 'CreateLogGroup'):
-            filteredGroups.append(logGroup['logGroupName'])
+        if pattern.search(logGroup.get('logGroupName')) and (logGroup.get('eventName') == 'existingLogs' or logGroup.get('eventName') == 'CreateLogGroup'):
+            filteredGroups.append(logGroup.get('logGroupName'))
             continue
-        if tags & logGroup['tags']:
+        if tags and logGroup.get('tags'):
             for tag in tags:
                 tagArray = tag.split("=")
                 key = tagArray[0].trim()
                 value = tagArray[1].trim()
-                if (key, value) in logGroup['tags'].items():
-                    filteredGroups.append(logGroup['logGroupName'])
+                if (key, value) in logGroup.get('tags').items():
+                    filteredGroups.append(logGroup.get('logGroupName'))
                     break
-    return filterdGroups
+    return filteredGroups
+
 
 def getExistingLogGroups(token, logGroups):
     try:
-        response = client.describe_log_groups(
-            nextToken='',
-            limit=40
-        )
-        for logGroup in response['logGroups']:
-            logGroups.push({'logGroupName':logGroup['logGroupName'], 'tags':'', 'eventName':'existingLogs'}) # describe logs API doesn't offer a way to get tags for existing logs
-        if response['nextToken']: 
-            getExistingLogGroups(response['nextToken'], logGroups)
+        print('Fetching existing logGroups')
+        if token:
+            response = client.describe_log_groups(
+                nextToken=token
+            )
+        else: 
+            response = client.describe_log_groups()
+        for logGroup in response.get('logGroups'):
+            # describe logs API doesn't offer a way to get tags for existing logs
+            logGroups.append({'logGroupName': logGroup.get(
+                'logGroupName'), 'tags': '', 'eventName': 'existingLogs'})
+        if response.get('nextToken'):
+            getExistingLogGroups(response.get('nextToken'), logGroups)
         return logGroups
     except Exception as e:
         print(f'Error fetching logGroups => {e}')
@@ -77,13 +91,12 @@ def lambda_handler(event, context):
     """
 
     print("Starting Log Connector Function")
-
     if (USE_EXISTING_LOG_GROUPS == 'false'):
-        logGroups = [({'logGroupName': event['detail']['requestParameters']['logGroupName'],
-                       'tags':event['detail']['requestParameters']['tags'], 'eventName':event['detail']['eventName']})]
+        logGroups = [({'logGroupName': event.get('detail').get('requestParameters').get('logGroupName'),
+                       'tags': event.get('detail').get('requestParameters').get('tags'), 'eventName': event.get('detail').get('eventName')})]
     else:
-        logGroups = getExistingLogGroups(null, [])
-    
+        logGroups = getExistingLogGroups(None, [])
+
     pattern = re.compile(LOG_GROUP_PATTERN)
     tags = LOG_GROUP_TAGS.split(",")
 
@@ -91,7 +104,9 @@ def lambda_handler(event, context):
     if logGroupNames:
         for name in logGroupNames:
             subscribeToLogIngestionFunction(name)
+    else:
+        print("Nothing matching your rules")
+    print("Ending Log Connector Function")
 
     # This makes it possible to chain this CW log consumer with others using a success destination
     return event
-

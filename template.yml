@@ -1,7 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: |
-  "Lambda Function to subscribe automatically loggroups matching an input pattern to New Relic log ingestion lambda function."
+Description: Lambda Function to subscribe automatically loggroups matching an input pattern to New Relic log ingestion lambda function.
 Globals:
   Function:
     Timeout: 300
@@ -52,6 +51,7 @@ Resources:
     Properties:
       CodeUri: ./
       Handler: loggroup-connector.lambda_handler
+      Description: Lambda Function to subscribe automatically loggroups matching an input pattern to New Relic log ingestion lambda function.
       Runtime: python3.8
       Environment:
         Variables:
