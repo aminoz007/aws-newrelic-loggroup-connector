@@ -28,7 +28,7 @@ Metadata:
 Parameters:
   LambdaARN:
     Type: String
-    Default: arn:aws:lambda:us-east-1:123456789000:function:NRLogIngestionLambda
+    Default: arn:aws:lambda:us-east-1:830139413159:function:newrelic-log-ingestion
     Description: Enter ARN for target lambda function
   LogGroupPattern:
     Type: String
