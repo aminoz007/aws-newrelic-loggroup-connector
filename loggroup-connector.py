@@ -55,8 +55,8 @@ def filterLogGroups(logGroups, pattern, tags):
         if tags and logGroup.get('tags'):
             for tag in tags:
                 tagArray = tag.split("=")
-                key = tagArray[0].trim()
-                value = tagArray[1].trim()
+                key = tagArray[0].strip()
+                value = tagArray[1].strip()
                 if (key, value) in logGroup.get('tags').items():
                     filteredGroups.append(logGroup.get('logGroupName'))
                     break
