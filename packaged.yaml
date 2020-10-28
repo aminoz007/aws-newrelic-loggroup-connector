@@ -1,15 +1,16 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: Lambda Function to subscribe automatically loggroups matching an input pattern to New Relic log ingestion lambda function.
+Description: Lambda Function to subscribe automatically loggroups matching an input
+  pattern to New Relic log ingestion lambda function.
 Globals:
   Function:
     Timeout: 300
     MemorySize: 128
-
 Metadata:
   AWS::ServerlessRepo::Application:
     Author: Amine Benzaied - New Relic
-    Description: Lambda Function to subscribe automatically loggroups matching an input pattern to New Relic log ingestion lambda function.
+    Description: Lambda Function to subscribe automatically loggroups matching an
+      input pattern to New Relic log ingestion lambda function.
     HomePageUrl: https://github.com/aminoz007/aws-newrelic-loggroup-connector
     Labels:
     - newrelic
@@ -18,13 +19,12 @@ Metadata:
     - loggroups
     - cloudwatch
     - logs
-    LicenseUrl: ./LICENSE
+    LicenseUrl: s3://loggroup-connector-newrelic/0cc1a9e33dd7a6eb0b79927742cf005c
     Name: newrelic-loggroup-connector
-    ReadmeUrl: ./README.md
+    ReadmeUrl: s3://loggroup-connector-newrelic/85b84e65e6e8fd689742849590218992
     SemanticVersion: 1.0.0
     SourceCodeUrl: https://github.com/aminoz007/aws-newrelic-loggroup-connector
-    SpdxLicenseId: Apache-2.0    
-
+    SpdxLicenseId: Apache-2.0
 Parameters:
   LambdaARN:
     Type: String
@@ -44,14 +44,17 @@ Parameters:
   LogGroupTags:
     Type: CommaDelimitedList
     Default: ''
-    Description: Enter comma separated keyvalue pairs for filtering logGroups using tags. Ex KeyName1=string,KeyName2=string. This is optional leave it blank if tag based filtering is not needed.
+    Description: Enter comma separated keyvalue pairs for filtering logGroups using
+      tags. Ex KeyName1=string,KeyName2=string. This is optional leave it blank if
+      tag based filtering is not needed.
 Resources:
   NewRelicLogGroupLambdaConnector:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./
+      CodeUri: s3://loggroup-connector-newrelic/c2bfbd209ffc587060ffe0f2be6137c7
       Handler: loggroup-connector.lambda_handler
-      Description: Lambda Function to subscribe automatically loggroups matching an input pattern to New Relic log ingestion lambda function.
+      Description: Lambda Function to subscribe automatically loggroups matching an
+        input pattern to New Relic log ingestion lambda function.
       Runtime: python3.8
       Environment:
         Variables:
