@@ -1,3 +1,7 @@
+[![GitHub issues](https://img.shields.io/github/issues-raw/aminoz007/aws-newrelic-loggroup-connector)](https://github.com/aminoz007/aws-newrelic-loggroup-connector/issues)
+[![License](https://img.shields.io/github/license/aminoz007/aws-newrelic-loggroup-connector)](https://github.com/aminoz007/aws-newrelic-loggroup-connector/blob/master/LICENSE)
+[![Badges](http://img.shields.io/:NR-Logs-ff6799.svg)](https://docs.newrelic.com/docs/logs/new-relic-logs/get-started/introduction-new-relic-logs)
+
 # New Relic CloudWatch LogGroups Connector
 
 AWS Serverless application that subscribes log groups from CloudWatch Logs to New Relic log ingestion lambda function.
