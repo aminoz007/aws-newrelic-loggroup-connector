@@ -4,7 +4,7 @@
 
 # New Relic CloudWatch LogGroups Connector
 
-AWS Serverless application that subscribes log groups from CloudWatch Logs to New Relic log ingestion lambda function.
+AWS Serverless application that subscribes log groups from CloudWatch Logs to New Relic log ingestion lambda function automatically.
 
 ## Installation
 
